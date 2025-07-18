@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %} BUDGETS{% endblock title %}
+
+{% block body %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Finance Overview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: #ffffff;
+            color: #2d3436;
+        }
+
+        header {
+            padding: 60px 40px 20px;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        p.subtitle {
+            font-size: 16px;
+            color: #636e72;
+        }
+
+        .finance-section {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            padding: 60px 40px;
+            gap: 30px;
+        }
+
+        .stat {
+            flex: 1;
+            min-width: 220px;
+            padding: 30px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 8px;
+            width: 100%;
+        }
+
+        .stat.balance::before {
+            background: linear-gradient(90deg, #6c5ce7, #a29bfe);
+        }
+
+        .stat.income::before {
+            background: linear-gradient(90deg, #00b894, #55efc4);
+        }
+
+        .stat.expense::before {
+            background: linear-gradient(90deg, #d63031, #fab1a0);
+        }
+
+        .stat .label {
+            font-size: 15px;
+            text-transform: uppercase;
+            color: #888;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat .value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #2d3436;
+        }
+
+        @media (max-width: 768px) {
+            .finance-section {
+                flex-direction: column;
+                align-items: center;
+                padding: 40px 20px;
+            }
+
+            header {
+                padding: 40px 20px 10px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Finance Overview</h1>
+        <p class="subtitle">Your latest financial summary</p>
+    </header>
+
+    <section class="finance-section">
+        <div class="stat balance">
+            <div class="label">Total Balance</div>
+            <div class="value" id="balance">--</div>
+        </div>
+        <div class="stat income">
+            <div class="label">Total Income</div>
+            <div class="value" id="income">--</div>
+        </div>
+        <div class="stat expense">
+            <div class="label">Total Expense</div>
+            <div class="value" id="expense">--</div>
+        </div>
+    </section>
+
+    <script>
+        fetch('/api/finance')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('balance').textContent = `$${data.total_balance}`;
+                document.getElementById('income').textContent = `$${data.total_income}`;
+                document.getElementById('expense').textContent = `$${data.total_expense}`;
+            })
+            .catch(error => {
+                console.error('Error fetching finance data:', error);
+            });
+    </script>
+
+</body>
+</html>
+
+
+{% endblock body %}
+
+
+
+
+
+
+
+

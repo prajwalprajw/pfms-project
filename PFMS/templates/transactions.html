@@ -1,0 +1,163 @@
+
+
+{% extends "base.html" %}
+{% block title %} Transactions {% endblock %}
+
+{% block body %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background:#d9d9d9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .balance {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 25px;
+      color: #0984e3;
+    }
+
+    .form-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    input, select, button {
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    select {
+      background: #ecf0f1;
+    }
+
+    button {
+      background: #00cec9;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #00b894;
+    }
+
+    .transactions {
+      list-style: none;
+      padding: 0;
+      margin-top: 30px;
+    }
+
+    .transaction {
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
+      background: #dfe6e9;
+    }
+
+    .income {
+      background: #dff9fb;
+      border-left: 6px solid #00b894;
+      color: #2ecc71;
+    }
+
+    .expense {
+      background: #ffeaa7;
+      border-left: 6px solid #d63031;
+      color: #d63031;
+    }
+
+    .type-label {
+      font-weight: bold;
+    }
+
+    .alert {
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .alert-success {
+      background-color: #2ecc71;
+      color: white;
+    }
+
+    .alert-warning {
+      background-color: #fdcb6e;
+      color: black;
+    }
+
+    .alert-danger {
+      background-color: #d63031;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>My Transactions</h1>
+
+  <div class="container">
+    <div class="balance">
+      Total Balance: $<span>{{ total_balance | round(2) }}</span>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form class="form-section" method="POST" action="{{ url_for('transactions_page') }}">
+      <input type="text" name="description" placeholder="Enter description" required />
+      <input type="number" name="amount" placeholder="Enter amount" required />
+      <select name="type">
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+      <button type="submit">Add Transaction</button>
+    </form>
+
+    <ul class="transactions">
+      {% for transaction in transactions %}
+        <li class="transaction {{ transaction.type }}">
+          <span><span class="type-label">{{ 'Income' if transaction.type == 'income' else 'Expense' }}:</span> {{ transaction.description }}</span>
+          <span>{{ '+' if transaction.type == 'income' else '-' }}${{ '%.2f' | format(transaction.amount) }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+</body>
+</html>
+{% endblock %}

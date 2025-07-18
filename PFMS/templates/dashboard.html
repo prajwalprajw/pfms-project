@@ -1,0 +1,280 @@
+
+
+
+{% extends "base.html" %}
+
+{% block body %}
+<h1>Finance Dashboard</h1></br>
+</br>
+
+<div class="dashboard">
+  <div class="card balance">
+    <div class="icon">💰</div>
+    <h2>Total Balance</h2>
+    <p id="balance-amount">$0.00</p>
+  </div>
+
+  <div class="card income">
+    <div class="icon">📈</div>
+    <h2>Total Income</h2>
+    <p id="income-amount">$0.00</p>
+  </div>
+
+  <div class="card expense">
+    <div class="icon">📉</div>
+    <h2>Total Expense</h2>
+    <p id="expense-amount">$0.00</p>
+  </div>
+</div>
+</br></br></br></br>
+
+<div class="charts-row">
+  <div class="chart-box-small">
+    <canvas id="overviewChart"></canvas>
+  </div>
+  <div class="chart-box-small">
+    <canvas id="barChart"></canvas>
+  </div>
+  <div class="chart-box-small">
+    <canvas id="cashFlowChart"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const transactions = {{ transactions | tojson | safe }};
+
+  const incomeAmount = document.getElementById('income-amount');
+  const expenseAmount = document.getElementById('expense-amount');
+  const balanceAmount = document.getElementById('balance-amount');
+
+  let doughnutChart, barChart, cashFlowChart;
+
+  function updateDashboard() {
+    let income = 0, expense = 0;
+    const incomeData = [], expenseData = [], labels = [];
+
+    transactions.forEach((tx, idx) => {
+      if (tx.type === 'income') {
+        income += tx.amount;
+        incomeData.push(tx.amount);
+        expenseData.push(0);
+      } else {
+        expense += tx.amount;
+        expenseData.push(tx.amount);
+        incomeData.push(0);
+      }
+      labels.push(tx.label || `Tx ${idx + 1}`);
+    });
+
+    const balance = income - expense;
+
+    incomeAmount.textContent = `$${income.toFixed(2)}`;
+    expenseAmount.textContent = `$${expense.toFixed(2)}`;
+    balanceAmount.textContent = `$${balance.toFixed(2)}`;
+
+    updateDoughnutChart(income, expense);
+    updateBarChart(labels, incomeData, expenseData);
+    updateCashFlowChart(transactions);
+  }
+
+  function updateDoughnutChart(income, expense) {
+    const ctx = document.getElementById('overviewChart').getContext('2d');
+    if (doughnutChart) doughnutChart.destroy();
+    doughnutChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Income', 'Expense'],
+        datasets: [{
+          data: [income, expense],
+          backgroundColor: ['#2ecc71', '#e74c3c']
+        }]
+      },
+      options: {
+        responsive: true,
+        cutout: '65%',
+        plugins: {
+          legend: { display: true, position: 'bottom' },
+          tooltip: { enabled: true }
+        }
+      }
+    });
+  }
+
+  function updateBarChart(labels, incomeData, expenseData) {
+    const ctx = document.getElementById('barChart').getContext('2d');
+    if (barChart) barChart.destroy();
+    barChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: 'Income', data: incomeData, backgroundColor: '#2ecc71' },
+          { label: 'Expense', data: expenseData, backgroundColor: '#e74c3c' }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: { display: true, text: 'Transactions' },
+            ticks: { autoSkip: true, maxTicksLimit: 6 },
+            grid: { display: false }
+          },
+          y: {
+            title: { display: true, text: 'Amount ($)' },
+            beginAtZero: true,
+            grid: { color: '#ddd' }
+          }
+        },
+        plugins: {
+          legend: { display: true, position: 'top' },
+          tooltip: { enabled: true }
+        }
+      }
+    });
+  }
+
+  function updateCashFlowChart(transactions) {
+    const ctx = document.getElementById('cashFlowChart').getContext('2d');
+    if (cashFlowChart) cashFlowChart.destroy();
+
+    // Group and sum by date
+    const dailyTotals = {};
+    transactions.forEach(tx => {
+      const date = new Date(tx.date).toLocaleDateString();
+      dailyTotals[date] = (dailyTotals[date] || 0) + (tx.type === 'income' ? tx.amount : -tx.amount);
+    });
+
+    // Sort dates
+    const sortedDates = Object.keys(dailyTotals).sort((a, b) => new Date(a) - new Date(b));
+
+    // Cumulative totals
+    let runningTotal = 0;
+    const cumulativeData = sortedDates.map(date => {
+      runningTotal += dailyTotals[date];
+      return runningTotal;
+    });
+
+    // Create chart
+    cashFlowChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: sortedDates,
+        datasets: [{
+          label: 'Cumulative Cash Flow',
+          data: cumulativeData,
+          fill: true,
+          borderColor: '#3498db',
+          backgroundColor: 'rgba(52, 152, 219, 0.15)',
+          tension: 0.3,
+          pointRadius: 2,
+          pointBackgroundColor: '#3498db'
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            title: { display: true, text: 'Date' },
+            ticks: { autoSkip: true, maxTicksLimit: 6 },
+            grid: { display: false }
+          },
+          y: {
+            title: { display: true, text: 'Balance ($)' },
+            beginAtZero: true,
+            grid: { color: '#eee' }
+          }
+        },
+        plugins: {
+          legend: { display: true, position: 'top' },
+          tooltip: { enabled: true }
+        }
+      }
+    });
+  }
+
+  updateDashboard();
+</script>
+
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+    background: #ecf0f1;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 20px;
+    margin: 8px 0;
+    color: #2c3e50;
+  }
+
+  .dashboard {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 5px;
+  }
+
+  .card {
+    width: 220px;
+    padding: 10px;
+    border-radius: 8px;
+    color: white;
+    text-align: center;
+    font-size: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+  }
+
+  .card p {
+    font-size: 14px;
+    margin: 4px 0 0 0;
+    font-weight: bold;
+  }
+
+  .balance { background: #16a085; }
+  .income { background: #27ae60; }
+  .expense { background: #c0392b; }
+
+  .icon {
+    position: absolute;
+    top: 5px;
+    right: 30px;
+    font-size: 14px;
+    opacity: 0.2;
+  }
+
+  .charts-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 10px;
+  }
+
+  .chart-box-small {
+    background: #fff;
+    padding: 5px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    width: 30%;
+    min-width: 180px;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  canvas {
+    max-height: 200px !important;
+    max-width: 100% !important;
+  }
+</style>
+{% endblock %}

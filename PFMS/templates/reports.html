@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %} REPORTS{% endblock title %}
+
+{% block body %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Finance Report</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f7f9fb;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+
+    .selector {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    select {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .chart-container {
+      max-width: 700px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .summary {
+      max-width: 700px;
+      margin: 20px auto;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .summary h3 {
+      margin-bottom: 10px;
+      color: #34495e;
+    }
+
+    .summary ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .summary li {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .summary li span.amount {
+      font-weight: bold;
+      color: #e74c3c;
+    }
+
+    .summary li.income span.amount {
+      color: #2ecc71;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Monthly Financial Report</h1>
+
+  <div class="selector">
+    <label for="month-select">Select Month:</label>
+    <select id="month-select">
+      <option value="3" selected>April</option>
+      <option value="2">March</option>
+    </select>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="categoryChart"></canvas>
+  </div>
+
+  <div class="summary">
+    <h3>Transactions Summary</h3>
+    <ul id="transaction-list"></ul>
+  </div>
+
+  <script>
+    const transactions = {{ transactions | tojson | safe }};
+  
+    const incomeAmount = document.getElementById('income-amount');
+    const expenseAmount = document.getElementById('expense-amount');
+    const balanceAmount = document.getElementById('balance-amount');
+  
+    let doughnutChart;
+    let barChart;
+  
+    function updateDashboard() {
+      let income = 0, expense = 0;
+  
+      const incomeData = [];
+      const expenseData = [];
+      const labels = [];
+  
+      transactions.forEach((tx, idx) => {
+        if (tx.type === 'income') {
+          income += tx.amount;
+          incomeData.push(tx.amount);
+          expenseData.push(0);
+        } else if (tx.type === 'expense') {
+          expense += tx.amount;
+          expenseData.push(tx.amount);
+          incomeData.push(0);
+        }
+        labels.push(tx.label || `Transaction ${idx + 1}`);
+      });
+  
+      const balance = income - expense;
+  
+      incomeAmount.textContent = `$${income.toFixed(2)}`;
+      expenseAmount.textContent = `$${expense.toFixed(2)}`;
+      balanceAmount.textContent = `$${balance.toFixed(2)}`;
+  
+      updateDoughnutChart(income, expense);
+      updateBarChart(labels, incomeData, expenseData);
+    }
+  
+    function updateDoughnutChart(income, expense) {
+      const ctx = document.getElementById('overviewChart').getContext('2d');
+      if (doughnutChart) doughnutChart.destroy();
+  
+      doughnutChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Income', 'Expense'],
+          datasets: [{
+            data: [income, expense],
+            backgroundColor: ['#2ecc71', '#e74c3c']
+          }]
+        },
+        options: {
+          responsive: true,
+          cutout: '65%',
+          plugins: {
+            legend: { position: 'bottom' },
+            title: { display: false }
+          }
+        }
+      });
+    }
+  
+    function updateBarChart(labels, incomeData, expenseData) {
+      const ctx = document.getElementById('barChart').getContext('2d');
+      if (barChart) barChart.destroy();
+  
+      barChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Income',
+              data: incomeData,
+              backgroundColor: '#2ecc71'
+            },
+            {
+              label: 'Expense',
+              data: expenseData,
+              backgroundColor: '#e74c3c'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          },
+          plugins: {
+            legend: { position: 'top' }
+          }
+        }
+      });
+    }
+  
+    updateDashboard();
+  </script>
+{% endblock body %}

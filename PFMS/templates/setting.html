@@ -1,0 +1,59 @@
+
+
+{% extends "base.html" %}
+{% block title %}Savings Goals{% endblock %}
+
+{% block body %}
+<h1 style="text-align:center; color:#2c3e50;">My Savings Goals</h1>
+
+<div class="goals-container" style="max-width:800px; margin:30px auto; display:flex; flex-direction:column; gap:30px;">
+  {% for goal in savings_goals %}
+    {% set percent = (goal.saved / goal.target * 100) if goal.target > 0 else 0 %}
+    <div class="goal-card" style="background:white; padding:20px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+      <div class="goal-header" style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="margin:0; color:#34495e;">{{ goal.name }}</h2>
+        <span>{{ percent | round(1) }}%</span>
+      </div>
+
+      <div class="progress-container" style="margin-top:15px;">
+        <div class="progress-bar" style="height:25px; background:#e0e0e0; border-radius:20px; overflow:hidden;">
+          <div class="progress" style="
+            height:100%;
+            width: {{ percent }}%;
+            background: linear-gradient(to right, #00b894, #00cec9);
+            text-align: right;
+            padding-right: 10px;
+            color: white;
+            font-weight: bold;
+            border-radius: 20px;
+            transition: width 0.5s ease;
+          ">
+            {% if percent >= 20 %}{{ percent | round(1) }}%{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="goal-info" style="margin-top:10px; font-size:16px; color:#555;">
+        Saved: ${{ goal.saved }} / ${{ goal.target }}
+      </div>
+
+      <form method="POST" action="{{ url_for('add_savings') }}">
+        <input type="hidden" name="index" value="{{ loop.index0 }}">
+        <input type="hidden" name="amount" value="500">
+        <button class="update-btn" type="submit" style="
+          margin-top:10px;
+          background: #0984e3;
+          color: white;
+          border: none;
+          padding: 8px 12px;
+          font-size: 14px;
+          border-radius: 6px;
+          cursor: pointer;
+        ">
+          Add $500
+        </button>
+      </form>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}
