@@ -10,11 +10,6 @@ from sqlalchemy import text
 from datetime import datetime
 from flask import flash
 
-'''
-from main import db
-from main.models import Transaction
-from flask_login import current_user'''
-
 
 transactions = []
 savings_goals = [
@@ -38,8 +33,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-
-
 #app.config['SQLALCHEMY_DATABASE_URI']='mysql://username:password@localhost/databas_table_name'
 app.config['SQLALCHEMY_DATABASE_URI']='mysql://root:prajwal%40123@localhost/pfms'
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root@localhost/pfms'
@@ -56,11 +49,6 @@ class User(UserMixin,db.Model):
 
 @app.route("/",methods=['POST','GET'])
 
-
-
-
-  
-  
 
 def base():
     if request.method == "POST":
@@ -87,8 +75,6 @@ def base():
     return render_template('home.html')
 
 
-
-
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.String, db.ForeignKey('user.id'), nullable=False)
@@ -96,7 +82,6 @@ class Transaction(db.Model):
     amount = db.Column(db.FLOAT)
     type = db.Column(db.String(10))  # 'income' or 'expense'
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
 
 
     
@@ -114,7 +99,6 @@ def Dashboard():
     ]
 
     return render_template('dashboard.html', transactions=transactions_data, username=current_user.username)
-
 
   
 @app.route("/Transactions", methods=['GET', 'POST'])
@@ -167,13 +151,6 @@ def transactions_page():
     return render_template("Transactions.html", transactions=transactions_data, total_balance=total_balance)
 
 
-  
-  
-
-
-
-
-
 @app.route("/Budgets")
 def  Budgets():
     
@@ -183,10 +160,6 @@ def  Budgets():
 @app.route("/Reports")
 def  Reports():
     return render_template('reports.html')
-
-
-
-
 
 
 @app.route('/Settings')
@@ -220,21 +193,9 @@ def add_savings():
     return redirect(url_for('Settings'))
 
 
-
-
-
-
-
-
-
 @app.route("/Authentication")
 def  Authentication():
     return render_template('authentication.html')
-
-
-
-
-
 
 
 @app.route("/Loging",methods=['POST','GET'])
